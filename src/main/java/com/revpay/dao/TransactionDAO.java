@@ -89,4 +89,87 @@ public class TransactionDAO {
             }
         }
     }
+    // ... inside TransactionDAO ...
+
+    // NEW METHOD: Get history for a specific user
+    public java.util.List<Transaction> getTransactionHistory(int userId) {
+        java.util.List<Transaction> history = new java.util.ArrayList<>();
+
+        // We want records where I sent money OR I received money
+        String sql = "SELECT * FROM transactions WHERE sender_id = ? OR receiver_id = ? ORDER BY timestamp DESC";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.setInt(2, userId);
+
+            java.sql.ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Transaction t = new Transaction();
+                t.setTransactionId(rs.getInt("transaction_id"));
+                t.setSenderId(rs.getInt("sender_id"));
+                t.setReceiverId(rs.getInt("receiver_id"));
+                t.setAmount(rs.getBigDecimal("amount"));
+                t.setType(TransactionType.valueOf(rs.getString("transaction_type")));
+                t.setStatus(TransactionStatus.valueOf(rs.getString("status")));
+                t.setTimestamp(rs.getTimestamp("timestamp"));
+
+                history.add(t);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return history;
+    }
+
+    // ... inside TransactionDAO ...
+
+    // NEW METHOD: Deposit money (Add funds)
+    public boolean depositMoney(int userId, BigDecimal amount) {
+        Connection conn = null;
+        PreparedStatement depositStmt = null;
+        PreparedStatement logStmt = null;
+
+        String depositSQL = "UPDATE wallets SET balance = balance + ? WHERE user_id = ?";
+        String logSQL = "INSERT INTO transactions (sender_id, receiver_id, amount, transaction_type, status) VALUES (?, ?, ?, ?, ?)";
+
+        try {
+            conn = DatabaseConnection.getConnection();
+            conn.setAutoCommit(false); // Start Transaction
+
+            // 1. Add Money to Wallet
+            depositStmt = conn.prepareStatement(depositSQL);
+            depositStmt.setBigDecimal(1, amount);
+            depositStmt.setInt(2, userId);
+            int rows = depositStmt.executeUpdate();
+
+            if (rows == 0) throw new SQLException("Wallet not found.");
+
+            // 2. Log it (Sender is self, Receiver is self for Deposit)
+            logStmt = conn.prepareStatement(logSQL);
+            logStmt.setInt(1, userId);
+            logStmt.setInt(2, userId);
+            logStmt.setBigDecimal(3, amount);
+            logStmt.setString(4, TransactionType.DEPOSIT.name());
+            logStmt.setString(5, TransactionStatus.SUCCESS.name());
+            logStmt.executeUpdate();
+
+            conn.commit(); // Save changes
+            return true;
+
+        } catch (SQLException e) {
+            if (conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+            e.printStackTrace();
+            return false;
+        } finally {
+            // Clean up
+            try {
+                if (depositStmt != null) depositStmt.close();
+                if (logStmt != null) logStmt.close();
+                if (conn != null) { conn.setAutoCommit(true); conn.close(); }
+            } catch (SQLException e) { e.printStackTrace(); }
+        }
+    }
 }

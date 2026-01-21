@@ -30,4 +30,23 @@ public class TransactionService {
         // 4. Execute Transaction
         return transactionDAO.transferMoney(senderId, receiverId, amount);
     }
+
+    // ... inside TransactionService ...
+
+    public java.util.List<com.revpay.model.Transaction> getHistory(int userId) {
+        return transactionDAO.getTransactionHistory(userId);
+    }
+
+    // ... inside TransactionService ...
+
+    public boolean processDeposit(int userId, BigDecimal amount) {
+        // 1. Validation: Positive Amount
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            System.out.println("❌ Deposit amount must be positive.");
+            return false;
+        }
+
+        // 2. Call DAO
+        return transactionDAO.depositMoney(userId, amount);
+    }
 }
