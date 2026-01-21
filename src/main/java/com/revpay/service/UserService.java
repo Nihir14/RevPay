@@ -55,4 +55,15 @@ public class UserService {
     public BigDecimal getBalance(int userId) {
         return walletDAO.getBalance(userId);
     }
+
+    // ... inside UserService ...
+
+    // Helper: Find User ID by Email
+    public int getUserIdByEmail(String email) {
+        User user = userDAO.getUserByEmail(email);
+        if (user != null) {
+            return user.getUserId();
+        }
+        return -1; // Return -1 if not found
+    }
 }
