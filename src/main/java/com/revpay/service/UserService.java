@@ -58,6 +58,20 @@ public class UserService {
 
     // ... inside UserService ...
 
+    // Add this inside UserService.java
+    public boolean deleteAccount(int userId) {
+        return userDAO.deleteUser(userId);
+    }
+
+    // Add to UserService.java
+    public String getUserEmailById(int userId) {
+        // A quick way to find email from ID (since TransactionService requires email)
+        // In a real app, you'd overload processTransfer to accept IDs directly.
+        // For now, you can just return the email from UserDAO if you implement findById there,
+        // OR just modify TransactionService to accept IDs directly (Recommended).
+        return "user_email_placeholder"; // You should actually implement this properly or overload TransactionService
+    }
+
     // Helper: Find User ID by Email
     public int getUserIdByEmail(String email) {
         User user = userDAO.getUserByEmail(email);
