@@ -4,14 +4,51 @@ import com.revpay.config.DatabaseConnection;
 import com.revpay.model.Transaction;
 import com.revpay.model.TransactionStatus;
 import com.revpay.model.TransactionType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * Data Access Object (DAO) for handling Financial Transactions.
+ * <p>
+ * This class manages the movement of funds within the system. It enforces
+ * <b>ACID properties</b> (Atomicity, Consistency, Isolation, Durability) by using
+ * database transactions (commit/rollback) to ensure money is never lost or duplicated
+ * during transfers.
+ * </p>
+ *
+ * @author RevPay Dev Team
+ * @version 1.0
+ */
 public class TransactionDAO {
 
+    // Initialize Log4j Logger
+    private static final Logger logger = LogManager.getLogger(TransactionDAO.class);
+
+    /**
+     * Transfers money from one user to another securely.
+     * <p>
+     * This method performs three atomic steps:
+     * <ol>
+     * <li>Withdraw amount from Sender (validating sufficient funds).</li>
+     * <li>Deposit amount to Receiver.</li>
+     * <li>Log the transaction record.</li>
+     * </ol>
+     * If any step fails, the entire operation is rolled back.
+     * </p>
+     *
+     * @param senderId   The User ID sending the money.
+     * @param receiverId The User ID receiving the money.
+     * @param amount     The amount to transfer.
+     * @return {@code true} if the transfer is successful, {@code false} if failed (e.g., low balance).
+     */
     public boolean transferMoney(int senderId, int receiverId, BigDecimal amount) {
         Connection conn = null;
         PreparedStatement withdrawStmt = null;
@@ -24,18 +61,19 @@ public class TransactionDAO {
 
         try {
             conn = DatabaseConnection.getConnection();
-            
-            // 🛑 CRITICAL: Turn off auto-save. We want to save manually only if EVERYTHING works.
+
+            // 🛑 CRITICAL: Turn off auto-save. Start Atomic Transaction.
             conn.setAutoCommit(false);
 
             // 1. Withdraw from Sender
             withdrawStmt = conn.prepareStatement(withdrawSQL);
             withdrawStmt.setBigDecimal(1, amount);
             withdrawStmt.setInt(2, senderId);
-            withdrawStmt.setBigDecimal(3, amount); // Check if they have enough balance
+            withdrawStmt.setBigDecimal(3, amount); // Ensure balance >= amount
             int rowsAffected1 = withdrawStmt.executeUpdate();
 
             if (rowsAffected1 == 0) {
+                logger.warn("Transfer Failed: Insufficient funds or invalid sender (User ID: " + senderId + ")");
                 throw new SQLException("Insufficient funds or invalid sender.");
             }
 
@@ -46,6 +84,7 @@ public class TransactionDAO {
             int rowsAffected2 = depositStmt.executeUpdate();
 
             if (rowsAffected2 == 0) {
+                logger.warn("Transfer Failed: Invalid receiver (User ID: " + receiverId + ")");
                 throw new SQLException("Invalid receiver.");
             }
 
@@ -60,42 +99,34 @@ public class TransactionDAO {
 
             // ✅ If we get here, everything worked! Commit the changes.
             conn.commit();
+            logger.info("✅ Transfer Successful: $" + amount + " from ID " + senderId + " to ID " + receiverId);
             return true;
 
         } catch (SQLException e) {
             // ❌ If ANY error happened, UNDO everything.
             if (conn != null) {
                 try {
-                    System.out.println("⚠️ Transaction failed. Rolling back money...");
+                    logger.error("⚠️ Transaction Error. Rolling back changes...", e);
                     conn.rollback();
                 } catch (SQLException ex) {
-                    ex.printStackTrace();
+                    logger.error("Critical: Rollback failed!", ex);
                 }
             }
-            e.printStackTrace();
             return false;
         } finally {
             // Close everything to prevent memory leaks
-            try {
-                if (withdrawStmt != null) withdrawStmt.close();
-                if (depositStmt != null) depositStmt.close();
-                if (logStmt != null) logStmt.close();
-                if (conn != null) {
-                    conn.setAutoCommit(true); // Reset to default
-                    conn.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            closeResources(withdrawStmt, depositStmt, logStmt, conn);
         }
     }
-    // ... inside TransactionDAO ...
 
-    // NEW METHOD: Get history for a specific user
-    public java.util.List<Transaction> getTransactionHistory(int userId) {
-        java.util.List<Transaction> history = new java.util.ArrayList<>();
-
-        // We want records where I sent money OR I received money
+    /**
+     * Retrieves the transaction history for a specific user.
+     *
+     * @param userId The User ID to fetch history for.
+     * @return A {@link List} of {@link Transaction} objects ordered by date (newest first).
+     */
+    public List<Transaction> getTransactionHistory(int userId) {
+        List<Transaction> history = new ArrayList<>();
         String sql = "SELECT * FROM transactions WHERE sender_id = ? OR receiver_id = ? ORDER BY timestamp DESC";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -104,7 +135,7 @@ public class TransactionDAO {
             stmt.setInt(1, userId);
             stmt.setInt(2, userId);
 
-            java.sql.ResultSet rs = stmt.executeQuery();
+            ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
                 Transaction t = new Transaction();
@@ -119,14 +150,18 @@ public class TransactionDAO {
                 history.add(t);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("❌ Error fetching transaction history for User ID " + userId, e);
         }
         return history;
     }
 
-    // ... inside TransactionDAO ...
-
-    // NEW METHOD: Deposit money (Add funds)
+    /**
+     * Deposits money into a user's wallet.
+     *
+     * @param userId The User ID to deposit into.
+     * @param amount The amount to add.
+     * @return {@code true} if successful, {@code false} otherwise.
+     */
     public boolean depositMoney(int userId, BigDecimal amount) {
         Connection conn = null;
         PreparedStatement depositStmt = null;
@@ -145,7 +180,10 @@ public class TransactionDAO {
             depositStmt.setInt(2, userId);
             int rows = depositStmt.executeUpdate();
 
-            if (rows == 0) throw new SQLException("Wallet not found.");
+            if (rows == 0) {
+                logger.warn("Deposit Failed: Wallet not found for User ID " + userId);
+                throw new SQLException("Wallet not found.");
+            }
 
             // 2. Log it (Sender is self, Receiver is self for Deposit)
             logStmt = conn.prepareStatement(logSQL);
@@ -157,19 +195,25 @@ public class TransactionDAO {
             logStmt.executeUpdate();
 
             conn.commit(); // Save changes
+            logger.info("✅ Deposit Successful: $" + amount + " for User ID " + userId);
             return true;
 
         } catch (SQLException e) {
             if (conn != null) try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
-            e.printStackTrace();
+            logger.error("❌ Deposit Error for User ID " + userId, e);
             return false;
         } finally {
-            // Clean up
-            try {
-                if (depositStmt != null) depositStmt.close();
-                if (logStmt != null) logStmt.close();
-                if (conn != null) { conn.setAutoCommit(true); conn.close(); }
-            } catch (SQLException e) { e.printStackTrace(); }
+            closeResources(depositStmt, logStmt, null, conn);
         }
+    }
+
+    // Helper to close resources safely
+    private void closeResources(PreparedStatement s1, PreparedStatement s2, PreparedStatement s3, Connection conn) {
+        try {
+            if (s1 != null) s1.close();
+            if (s2 != null) s2.close();
+            if (s3 != null) s3.close();
+            if (conn != null) { conn.setAutoCommit(true); conn.close(); }
+        } catch (SQLException e) { logger.error("Error closing resources", e); }
     }
 }

@@ -1,0 +1,135 @@
+2026-01-25 08:41:59 [main] INFO  com.revpay.service.UserService - New User Registered: nihir@gmail.com
+2026-01-25 08:42:34 [main] INFO  com.revpay.service.UserService - Login attempt for: nihir@gmail.com
+2026-01-25 08:42:35 [main] INFO  com.revpay.service.UserService - Login Successful: 3
+2026-01-25 08:43:05 [main] INFO  com.revpay.service.UserService - Login attempt for: nihir@gmail.com
+2026-01-25 08:43:05 [main] WARN  com.revpay.service.UserService - Login Failed: Bad password for nihir@gmail.com
+2026-01-25 09:11:23 [main] ERROR com.revpay.dao.InvoiceDAO - ❌ Failed to create invoice for customer: test_customer@example.com
+java.sql.SQLIntegrityConstraintViolationException: Cannot add or update a child row: a foreign key constraint fails (`revpay_db`.`invoices`, CONSTRAINT `invoices_ibfk_1` FOREIGN KEY (`business_id`) REFERENCES `users` (`user_id`))
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:118) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:916) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1061) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1009) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1320) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:994) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.revpay.dao.InvoiceDAO.createInvoice(InvoiceDAO.java:48) [classes/:?]
+	at com.revpay.test.dao.InvoiceDAOTest.testInvoiceLifecycle(InvoiceDAOTest.java:40) [test-classes/:?]
+	at jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[?:?]
+	at java.lang.reflect.Method.invoke(Method.java:580) ~[?:?]
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59) [junit-4.13.2.jar:4.13.2]
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56) [junit-4.13.2.jar:4.13.2]
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:137) [junit-4.13.2.jar:4.13.2]
+	at com.intellij.junit4.JUnit4IdeaTestRunner.startRunnerWithArgs(JUnit4IdeaTestRunner.java:69) [junit-rt.jar:?]
+	at com.intellij.rt.junit.IdeaTestRunner$Repeater$1.execute(IdeaTestRunner.java:38) [junit-rt.jar:?]
+	at com.intellij.rt.execution.junit.TestsRepeater.repeat(TestsRepeater.java:11) [idea_rt.jar:?]
+	at com.intellij.rt.junit.IdeaTestRunner$Repeater.startRunnerWithArgs(IdeaTestRunner.java:35) [junit-rt.jar:?]
+	at com.intellij.rt.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:237) [junit-rt.jar:?]
+	at com.intellij.rt.junit.JUnitStarter.main(JUnitStarter.java:58) [junit-rt.jar:?]
+2026-01-25 09:13:02 [main] INFO  com.revpay.dao.InvoiceDAO - ✅ Invoice Created: $99.99 for customer_1769312582034@example.com
+2026-01-25 09:13:02 [main] INFO  com.revpay.dao.InvoiceDAO - ✅ Invoice #2 marked as PAID.
+2026-01-25 09:16:20 [main] INFO  com.revpay.dao.LoanDAO - ✅ Loan Application Submitted: User ID 5 requested $15000.00
+2026-01-25 09:17:59 [main] INFO  com.revpay.dao.PaymentMethodDAO - ✅ Payment Method Added: CREDIT ending in ****5678 for User ID 6
+2026-01-25 09:23:19 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: lifecycle_test_1769313198488@revpay.com
+2026-01-25 09:23:19 [main] WARN  com.revpay.dao.UserDAO - ⚠️ Attempting to delete User ID: 7
+2026-01-25 09:23:19 [main] INFO  com.revpay.dao.UserDAO - ✅ User ID 7 Deleted Successfully.
+2026-01-25 09:23:32 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: sender_1769313211424@revpay.com
+2026-01-25 09:23:32 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: receiver_1769313212153@revpay.com
+2026-01-25 09:23:32 [main] INFO  com.revpay.dao.TransactionDAO - ✅ Deposit Successful: $100.00 for User ID 8
+2026-01-25 09:23:32 [main] INFO  com.revpay.dao.TransactionDAO - ✅ Transfer Successful: $40.00 from ID 8 to ID 9
+2026-01-25 09:23:32 [main] WARN  com.revpay.dao.TransactionDAO - Transfer Failed: Insufficient funds or invalid sender (User ID: 8)
+2026-01-25 09:23:32 [main] ERROR com.revpay.dao.TransactionDAO - ⚠️ Transaction Error. Rolling back changes...
+java.sql.SQLException: Insufficient funds or invalid sender.
+	at com.revpay.dao.TransactionDAO.transferMoney(TransactionDAO.java:77) [classes/:?]
+	at com.revpay.test.dao.TransactionDAOTest.testDepositAndTransfer(TransactionDAOTest.java:102) [test-classes/:?]
+	at jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[?:?]
+	at java.lang.reflect.Method.invoke(Method.java:580) ~[?:?]
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59) [junit-4.13.2.jar:4.13.2]
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56) [junit-4.13.2.jar:4.13.2]
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17) [junit-4.13.2.jar:4.13.2]
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26) [junit-4.13.2.jar:4.13.2]
+	at org.junit.internal.runners.statements.RunAfters.evaluate(RunAfters.java:27) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:413) [junit-4.13.2.jar:4.13.2]
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:137) [junit-4.13.2.jar:4.13.2]
+	at com.intellij.junit4.JUnit4IdeaTestRunner.startRunnerWithArgs(JUnit4IdeaTestRunner.java:69) [junit-rt.jar:?]
+	at com.intellij.rt.junit.IdeaTestRunner$Repeater$1.execute(IdeaTestRunner.java:38) [junit-rt.jar:?]
+	at com.intellij.rt.execution.junit.TestsRepeater.repeat(TestsRepeater.java:11) [idea_rt.jar:?]
+	at com.intellij.rt.junit.IdeaTestRunner$Repeater.startRunnerWithArgs(IdeaTestRunner.java:35) [junit-rt.jar:?]
+	at com.intellij.rt.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:237) [junit-rt.jar:?]
+	at com.intellij.rt.junit.JUnitStarter.main(JUnitStarter.java:58) [junit-rt.jar:?]
+2026-01-25 09:23:32 [main] WARN  com.revpay.dao.UserDAO - ⚠️ Attempting to delete User ID: 8
+2026-01-25 09:23:32 [main] INFO  com.revpay.dao.UserDAO - ✅ User ID 8 Deleted Successfully.
+2026-01-25 09:23:32 [main] WARN  com.revpay.dao.UserDAO - ⚠️ Attempting to delete User ID: 9
+2026-01-25 09:23:32 [main] INFO  com.revpay.dao.UserDAO - ✅ User ID 9 Deleted Successfully.
+2026-01-25 09:42:18 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: service_sender_1769314337661@test.com
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.WalletDAO - ✅ Wallet created for User ID: 10
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: service_receiver_1769314339047@test.com
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.WalletDAO - ✅ Wallet created for User ID: 11
+2026-01-25 09:42:19 [main] INFO  com.revpay.service.TransactionService - Initiating Transfer: 10 -> 11 ($100.00)
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.TransactionDAO - ✅ Transfer Successful: $100.00 from ID 10 to ID 11
+2026-01-25 09:42:19 [main] WARN  com.revpay.dao.UserDAO - ⚠️ Attempting to delete User ID: 10
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.UserDAO - ✅ User ID 10 Deleted Successfully.
+2026-01-25 09:42:19 [main] WARN  com.revpay.dao.UserDAO - ⚠️ Attempting to delete User ID: 11
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.UserDAO - ✅ User ID 11 Deleted Successfully.
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: service_sender_1769314339286@test.com
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.WalletDAO - ✅ Wallet created for User ID: 12
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: service_receiver_1769314339438@test.com
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.WalletDAO - ✅ Wallet created for User ID: 13
+2026-01-25 09:42:19 [main] WARN  com.revpay.service.TransactionService - Invalid Transfer: User 12 attempted to send money to themselves.
+2026-01-25 09:42:19 [main] WARN  com.revpay.dao.UserDAO - ⚠️ Attempting to delete User ID: 12
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.UserDAO - ✅ User ID 12 Deleted Successfully.
+2026-01-25 09:42:19 [main] WARN  com.revpay.dao.UserDAO - ⚠️ Attempting to delete User ID: 13
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.UserDAO - ✅ User ID 13 Deleted Successfully.
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: service_sender_1769314339613@test.com
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.WalletDAO - ✅ Wallet created for User ID: 14
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: service_receiver_1769314339743@test.com
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.WalletDAO - ✅ Wallet created for User ID: 15
+2026-01-25 09:42:19 [main] WARN  com.revpay.service.TransactionService - Invalid Transfer: User 14 attempted to send non-positive amount: 0
+2026-01-25 09:42:19 [main] WARN  com.revpay.dao.UserDAO - ⚠️ Attempting to delete User ID: 14
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.UserDAO - ✅ User ID 14 Deleted Successfully.
+2026-01-25 09:42:19 [main] WARN  com.revpay.dao.UserDAO - ⚠️ Attempting to delete User ID: 15
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.UserDAO - ✅ User ID 15 Deleted Successfully.
+2026-01-25 09:42:19 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: service_sender_1769314339913@test.com
+2026-01-25 09:42:20 [main] INFO  com.revpay.dao.WalletDAO - ✅ Wallet created for User ID: 16
+2026-01-25 09:42:20 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: service_receiver_1769314340063@test.com
+2026-01-25 09:42:20 [main] INFO  com.revpay.dao.WalletDAO - ✅ Wallet created for User ID: 17
+2026-01-25 09:42:20 [main] WARN  com.revpay.service.TransactionService - Invalid Transfer: User 16 attempted to send non-positive amount: -50.00
+2026-01-25 09:42:20 [main] WARN  com.revpay.dao.UserDAO - ⚠️ Attempting to delete User ID: 16
+2026-01-25 09:42:20 [main] INFO  com.revpay.dao.UserDAO - ✅ User ID 16 Deleted Successfully.
+2026-01-25 09:42:20 [main] WARN  com.revpay.dao.UserDAO - ⚠️ Attempting to delete User ID: 17
+2026-01-25 09:42:20 [main] INFO  com.revpay.dao.UserDAO - ✅ User ID 17 Deleted Successfully.
+2026-01-25 09:44:20 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: auth_test_1769314458732@revpay.com
+2026-01-25 09:44:20 [main] INFO  com.revpay.dao.WalletDAO - ✅ Wallet created for User ID: 18
+2026-01-25 09:44:20 [main] INFO  com.revpay.service.UserService - ✅ Registration Complete: Wallet created for auth_test_1769314458732@revpay.com
+2026-01-25 09:44:21 [main] INFO  com.revpay.service.UserService - ✅ User Logged In: auth_test_1769314458732@revpay.com
+2026-01-25 09:44:21 [main] WARN  com.revpay.service.UserService - Login Failed: Invalid password for email auth_test_1769314458732@revpay.com
+2026-01-25 09:44:21 [main] INFO  com.revpay.service.UserService - 🗑️ Deleting account for User ID: 18
+2026-01-25 09:44:21 [main] WARN  com.revpay.dao.UserDAO - ⚠️ Attempting to delete User ID: 18
+2026-01-25 09:44:21 [main] INFO  com.revpay.dao.UserDAO - ✅ User ID 18 Deleted Successfully.
+2026-01-25 09:48:59 [main] INFO  com.revpay.Main - 🚀 RevPay Application Started
+2026-01-25 09:48:59 [main] INFO  com.revpay.Main - 🛑 Application Stopped by User

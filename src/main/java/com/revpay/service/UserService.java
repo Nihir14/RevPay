@@ -4,80 +4,115 @@ import com.revpay.dao.UserDAO;
 import com.revpay.dao.WalletDAO;
 import com.revpay.model.User;
 import com.revpay.util.SecurityUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.math.BigDecimal;
 
+/**
+ * Service class for managing User Accounts.
+ * <p>
+ * This class handles high-level user operations such as Authentication (Login),
+ * Registration (including Wallet creation), and Account Deletion.
+ * </p>
+ *
+ * @author RevPay Dev Team
+ * @version 1.0
+ */
 public class UserService {
-    private UserDAO userDAO = new UserDAO();
 
+    // Initialize Log4j Logger
+    private static final Logger logger = LogManager.getLogger(UserService.class);
+
+    private UserDAO userDAO = new UserDAO();
+    private WalletDAO walletDAO = new WalletDAO();
+
+    /**
+     * Authenticates a user based on email and password.
+     *
+     * @param email    The user's email address.
+     * @param password The raw password (to be hashed and verified).
+     * @return The {@link User} object if authentication succeeds, {@code null} otherwise.
+     */
     public User login(String email, String password) {
         // 1. Get the user from the DB
         User user = userDAO.getUserByEmail(email);
 
         // 2. Check if user exists
         if (user == null) {
+            logger.warn("Login Failed: Account not found for email " + email);
             System.out.println("❌ Account not found.");
             return null;
         }
 
-        // 3. Verify the password
+        // 3. Verify the password using SecurityUtil (BCrypt)
         if (SecurityUtil.verifyPassword(password, user.getPasswordHash())) {
-            return user; // Login successful! Return the user object.
+            logger.info("✅ User Logged In: " + email);
+            return user;
         } else {
+            logger.warn("Login Failed: Invalid password for email " + email);
             System.out.println("❌ Wrong password.");
             return null;
         }
     }
-    
-    // Wrapper for registration to keep Main clean
-//    public boolean registerUser(User user) {
-//        return userDAO.registerUser(user);
-//    }
 
-    // ... inside UserService class ...
-    private WalletDAO walletDAO = new WalletDAO(); // Add this line at the top
-
+    /**
+     * Registers a new user and automatically creates their Digital Wallet.
+     *
+     * @param user The {@link User} object containing registration details.
+     * @return {@code true} if registration and wallet creation are successful.
+     */
     public boolean registerUser(User user) {
-        // 1. Register the User
+        // 1. Register the User in the DB
         boolean isRegistered = userDAO.registerUser(user);
 
-        // 2. If successful, find their ID and create a Wallet
+        // 2. If successful, find their new ID and create a Wallet
         if (isRegistered) {
-            User savedUser = userDAO.getUserByEmail(user.getEmail()); // Fetch to get the new ID
+            User savedUser = userDAO.getUserByEmail(user.getEmail());
             if (savedUser != null) {
                 walletDAO.createWallet(savedUser.getUserId());
+                logger.info("✅ Registration Complete: Wallet created for " + user.getEmail());
+            } else {
+                logger.error("❌ Registration Error: Could not fetch new user ID for wallet creation.");
+                return false;
             }
         }
         return isRegistered;
     }
 
-    // Add a wrapper to get balance easily
+    /**
+     * Retrieves the wallet balance for a specific user.
+     *
+     * @param userId The unique User ID.
+     * @return The current balance.
+     */
     public BigDecimal getBalance(int userId) {
         return walletDAO.getBalance(userId);
     }
 
-    // ... inside UserService ...
-
-    // Add this inside UserService.java
+    /**
+     * Deletes a user account and all associated data.
+     *
+     * @param userId The unique User ID.
+     * @return {@code true} if deletion was successful.
+     */
     public boolean deleteAccount(int userId) {
+        logger.info("🗑️ Deleting account for User ID: " + userId);
         return userDAO.deleteUser(userId);
     }
 
-    // Add to UserService.java
-    public String getUserEmailById(int userId) {
-        // A quick way to find email from ID (since TransactionService requires email)
-        // In a real app, you'd overload processTransfer to accept IDs directly.
-        // For now, you can just return the email from UserDAO if you implement findById there,
-        // OR just modify TransactionService to accept IDs directly (Recommended).
-        return "user_email_placeholder"; // You should actually implement this properly or overload TransactionService
-    }
-
-    // Helper: Find User ID by Email
+    /**
+     * Helper method to resolve an Email Address to a User ID.
+     *
+     * @param email The email to search for.
+     * @return The User ID if found, or -1 if not found.
+     */
     public int getUserIdByEmail(String email) {
         User user = userDAO.getUserByEmail(email);
         if (user != null) {
             return user.getUserId();
         }
-        return -1; // Return -1 if not found
+        logger.warn("User lookup failed: " + email);
+        return -1;
     }
 }

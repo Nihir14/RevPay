@@ -2,38 +2,71 @@ package com.revpay.dao;
 
 import com.revpay.config.DatabaseConnection;
 import com.revpay.model.User;
+import com.revpay.model.Role;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ * Data Access Object (DAO) for managing User entities.
+ * <p>
+ * This class handles the CRUD operations for Users, including registration,
+ * email lookup (for login), and a comprehensive cascade deletion process.
+ * </p>
+ *
+ * @author RevPay Dev Team
+ * @version 1.0
+ */
 public class UserDAO {
 
-    // Method to register a new user
+    // Initialize Log4j Logger
+    private static final Logger logger = LogManager.getLogger(UserDAO.class);
+
+    /**
+     * Registers a new user in the database.
+     *
+     * @param user The {@link User} object containing registration details.
+     * @return {@code true} if the user was successfully registered, {@code false} otherwise.
+     */
     public boolean registerUser(User user) {
         String sql = "INSERT INTO users (email, phone_number, password_hash, transaction_pin, full_name, role) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            // We replace the '?' with actual data
             stmt.setString(1, user.getEmail());
-            stmt.setString(2, user.getPhoneNumber());
-            stmt.setString(3, user.getPasswordHash()); // This must be already hashed
+            stmt.setString(2, user.getPhoneNumber()); // Ensure DB column is 'phone_number'
+            stmt.setString(3, user.getPasswordHash());
             stmt.setString(4, user.getTransactionPin());
             stmt.setString(5, user.getFullName());
-            stmt.setString(6, user.getRole().name()); // Converts Enum to String ("PERSONAL" or "BUSINESS")
+            stmt.setString(6, user.getRole().name());
 
             int rowsInserted = stmt.executeUpdate();
-            return rowsInserted > 0; // Returns true if the user was successfully added
+
+            if (rowsInserted > 0) {
+                logger.info("✅ New User Registered: " + user.getEmail());
+                return true;
+            }
 
         } catch (SQLException e) {
-            System.out.println("❌ Error registering user: " + e.getMessage());
-            e.printStackTrace();
-            return false;
+            logger.error("❌ Error registering user: " + user.getEmail(), e);
         }
+        return false;
     }
 
-    // NEW METHOD: Find a user by their email
+    /**
+     * Retrieves a user by their email address.
+     * <p>
+     * This is primarily used during the Login process to fetch credentials.
+     * </p>
+     *
+     * @param email The email address to search for.
+     * @return The {@link User} object if found, or {@code null} if not found.
+     */
     public User getUserByEmail(String email) {
         String sql = "SELECT * FROM users WHERE email = ?";
 
@@ -41,32 +74,45 @@ public class UserDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, email);
-            var rs = stmt.executeQuery();
+            ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                // If found, map the database row to our Java User object
                 User user = new User();
                 user.setUserId(rs.getInt("user_id"));
                 user.setEmail(rs.getString("email"));
                 user.setPhoneNumber(rs.getString("phone_number"));
-                user.setPasswordHash(rs.getString("password_hash")); // We need this to verify login
+                user.setPasswordHash(rs.getString("password_hash"));
                 user.setTransactionPin(rs.getString("transaction_pin"));
                 user.setFullName(rs.getString("full_name"));
-                user.setRole(com.revpay.model.Role.valueOf(rs.getString("role")));
+                // Safely parse Role
+                try {
+                    user.setRole(Role.valueOf(rs.getString("role")));
+                } catch (Exception e) {
+                    logger.warn("Invalid Role found for user " + email);
+                    user.setRole(Role.PERSONAL); // Default fallback
+                }
                 return user;
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("❌ Error fetching user by email: " + email, e);
         }
-        return null; // Return null if user not found
+        return null;
     }
 
-    // Add this inside UserDAO.java
-    // ... inside UserDAO class ...
-
-    // ... inside UserDAO ...
-
+    /**
+     * Deletes a user and ALL associated data (Cascade Delete).
+     * <p>
+     * This method performs a transactional delete, removing records from:
+     * Payment Methods, Requests, Invoices, Transactions, Loans, Wallets, and Business Profiles
+     * <b>before</b> deleting the User record itself.
+     * </p>
+     *
+     * @param userId The unique ID of the user to delete.
+     * @return {@code true} if deletion was successful, {@code false} if rolled back.
+     */
     public boolean deleteUser(int userId) {
+        logger.warn("⚠️ Attempting to delete User ID: " + userId);
+
         String[] sqlSteps = {
                 "DELETE FROM payment_methods WHERE user_id = ?",
                 "DELETE FROM payment_requests WHERE requester_id = ? OR payer_id = ?",
@@ -78,19 +124,15 @@ public class UserDAO {
                 "DELETE FROM users WHERE user_id = ?"
         };
 
-        // 1. Declare OUTSIDE try block so catch can see it
-        java.sql.Connection conn = null;
+        Connection conn = null;
 
         try {
-            conn = com.revpay.config.DatabaseConnection.getConnection();
-
-            // 2. Start Transaction
-            conn.setAutoCommit(false);
+            conn = DatabaseConnection.getConnection();
+            conn.setAutoCommit(false); // Start Transaction
 
             for (String sql : sqlSteps) {
-                try (java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                     stmt.setInt(1, userId);
-                    // Special cases for OR conditions
                     if (sql.contains("OR payer_id") || sql.contains("OR receiver_id")) {
                         stmt.setInt(2, userId);
                     }
@@ -98,28 +140,23 @@ public class UserDAO {
                 }
             }
 
-            // 3. Commit Success
             conn.commit();
+            logger.info("✅ User ID " + userId + " Deleted Successfully.");
             return true;
 
-        } catch (java.sql.SQLException e) {
-            e.printStackTrace();
-            // 4. Now 'conn' is visible here for Rollback
+        } catch (SQLException e) {
+            logger.error("❌ Error deleting user " + userId + ". Rolling back...", e);
             if (conn != null) {
-                try {
-                    System.out.println("⚠️ Error deleting. Rolling back changes...");
-                    conn.rollback();
-                } catch (java.sql.SQLException ex) { ex.printStackTrace(); }
+                try { conn.rollback(); } catch (SQLException ex) { logger.error("Rollback failed", ex); }
             }
             return false;
 
         } finally {
-            // 5. Always close connection manually since we didn't use try-with-resources for it
             if (conn != null) {
                 try {
-                    conn.setAutoCommit(true); // Good practice to reset
+                    conn.setAutoCommit(true);
                     conn.close();
-                } catch (java.sql.SQLException e) { e.printStackTrace(); }
+                } catch (SQLException e) { logger.error("Error closing connection", e); }
             }
         }
     }

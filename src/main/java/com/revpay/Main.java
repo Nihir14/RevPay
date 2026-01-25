@@ -8,13 +8,29 @@ import com.revpay.model.*;
 import com.revpay.service.TransactionService;
 import com.revpay.service.UserService;
 import com.revpay.util.SecurityUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * The Entry Point (Main Class) for the RevPay Application.
+ * <p>
+ * This class handles the Command Line Interface (CLI) interaction with the user.
+ * It routes user inputs to the appropriate Services and DAOs.
+ * </p>
+ *
+ * @author RevPay Dev Team
+ * @version 1.0
+ */
 public class Main {
+
+    // Initialize Log4j Logger
+    private static final Logger logger = LogManager.getLogger(Main.class);
+
     // --- SERVICES & DAOS ---
     private static UserService userService = new UserService();
     private static TransactionService transactionService = new TransactionService();
@@ -27,30 +43,52 @@ public class Main {
     private static Scanner scanner = new Scanner(System.in);
     private static User currentUser = null;
 
+    /**
+     * The main method that starts the application loop.
+     *
+     * @param args Command line arguments (not used).
+     */
     public static void main(String[] args) {
-        while (true) {
-            System.out.println("\n=== 🚀 Welcome to RevPay ===");
-            System.out.println("1. Register");
-            System.out.println("2. Login");
-            System.out.println("3. Exit");
-            System.out.print("Choose an option: ");
+        logger.info("🚀 RevPay Application Started");
+        System.out.println("\n=========================================");
+        System.out.println("      🚀 Welcome to RevPay System      ");
+        System.out.println("=========================================");
 
-            String choice = scanner.nextLine();
-            switch (choice) {
-                case "1": handleRegister(); break;
-                case "2": handleLogin(); break;
-                case "3": System.out.println("Goodbye!"); return;
-                default: System.out.println("Invalid option.");
+        try {
+            while (true) {
+                System.out.println("\n--- MAIN MENU ---");
+                System.out.println("1. Register");
+                System.out.println("2. Login");
+                System.out.println("3. Exit");
+                System.out.print("Choose an option: ");
+
+                String choice = scanner.nextLine();
+                switch (choice) {
+                    case "1": handleRegister(); break;
+                    case "2": handleLogin(); break;
+                    case "3":
+                        logger.info("🛑 Application Stopped by User");
+                        System.out.println("Goodbye! Thank you for using RevPay.");
+                        return; // Exit the app
+                    default:
+                        System.out.println("❌ Invalid option. Please try again.");
+                }
             }
+        } catch (Exception e) {
+            logger.fatal("🔥 Critical Application Crash", e);
+            System.out.println("❌ An unexpected error occurred. Please check logs.");
         }
     }
 
     // ==========================================
-    //       AUTHENTICATION
+    //       AUTHENTICATION HANDLERS
     // ==========================================
 
+    /**
+     * Handles the User Login flow.
+     */
     private static void handleLogin() {
-        System.out.println("\n--- LOGIN ---");
+        System.out.println("\n--- 🔐 LOGIN ---");
         System.out.print("Enter Email: ");
         String email = scanner.nextLine();
         System.out.print("Enter Password: ");
@@ -64,8 +102,11 @@ public class Main {
         }
     }
 
+    /**
+     * Handles the User Registration flow.
+     */
     private static void handleRegister() {
-        System.out.println("\n--- REGISTER ---");
+        System.out.println("\n--- 📝 REGISTER ---");
         System.out.println("Select Account Type:\n1. Personal\n2. Business");
         System.out.print("Choice: ");
         String roleChoice = scanner.nextLine();
@@ -82,11 +123,14 @@ public class Main {
         System.out.print("Enter 4-digit PIN: ");
         String pin = scanner.nextLine();
 
+        // Hash password before sending to model
         String hashedPassword = SecurityUtil.hashPassword(rawPassword);
         User newUser = new User(email, phone, hashedPassword, pin, name, role);
 
         if (userService.registerUser(newUser)) {
-            System.out.println("✅ Registered Successfully!");
+            System.out.println("✅ Registered Successfully! Please Login.");
+        } else {
+            System.out.println("❌ Registration Failed. Email might already exist.");
         }
     }
 
@@ -94,14 +138,17 @@ public class Main {
     //           USER DASHBOARD
     // ==========================================
 
+    /**
+     * Displays the dashboard menu based on the user's Role.
+     */
     private static void showUserDashboard() {
         while (currentUser != null) {
             System.out.println("\n=== 🏦 " + currentUser.getFullName() + "'s Dashboard ===");
             System.out.println("1. Check Balance");
             System.out.println("2. Add Money (Deposit)");
             System.out.println("3. Send Money");
-            System.out.println("4. Request Money");          // Restored
-            System.out.println("5. Pending Requests & Invoices"); // Combined Inbox
+            System.out.println("4. Request Money");
+            System.out.println("5. Pending Requests & Invoices");
             System.out.println("6. Manage Cards");
             System.out.println("7. Transaction History");
 
@@ -121,39 +168,47 @@ public class Main {
             System.out.print("Choose an option: ");
             String choice = scanner.nextLine();
 
-            // Unified Switch
-            switch (choice) {
-                case "1": checkBalance(); break;
-                case "2": handleAddMoney(); break;
-                case "3": handleSendMoney(); break;
-                case "4": handleRequestMoney(); break;      // Restored
-                case "5": handlePendingPayments(); break;   // Inbox
-                case "6": handleManageCards(); break;
-                case "7": handleViewHistory(); break;
-
-                // Business vs Personal Routing
-                case "8":
-                    if (currentUser.getRole() == Role.BUSINESS) handleCreateInvoice();
-                    else handleDeleteAccount();
-                    break;
-                case "9":
-                    if (currentUser.getRole() == Role.BUSINESS) handleApplyLoan();
-                    else logout();
-                    break;
-                case "10":
-                    if (currentUser.getRole() == Role.BUSINESS) handleViewLoans();
-                    else System.out.println("Invalid option.");
-                    break;
-                case "11":
-                    if (currentUser.getRole() == Role.BUSINESS) handleDeleteAccount();
-                    else System.out.println("Invalid option.");
-                    break;
-                case "12":
-                    if (currentUser.getRole() == Role.BUSINESS) logout();
-                    else System.out.println("Invalid option.");
-                    break;
-                default: System.out.println("❌ Invalid option.");
+            try {
+                processDashboardChoice(choice);
+            } catch (Exception e) {
+                logger.error("Error processing dashboard choice", e);
+                System.out.println("❌ An error occurred processing your request.");
             }
+        }
+    }
+
+    private static void processDashboardChoice(String choice) {
+        switch (choice) {
+            case "1": checkBalance(); break;
+            case "2": handleAddMoney(); break;
+            case "3": handleSendMoney(); break;
+            case "4": handleRequestMoney(); break;
+            case "5": handlePendingPayments(); break;
+            case "6": handleManageCards(); break;
+            case "7": handleViewHistory(); break;
+
+            // Business vs Personal Routing
+            case "8":
+                if (currentUser.getRole() == Role.BUSINESS) handleCreateInvoice();
+                else handleDeleteAccount();
+                break;
+            case "9":
+                if (currentUser.getRole() == Role.BUSINESS) handleApplyLoan();
+                else logout();
+                break;
+            case "10":
+                if (currentUser.getRole() == Role.BUSINESS) handleViewLoans();
+                else System.out.println("❌ Invalid option.");
+                break;
+            case "11":
+                if (currentUser.getRole() == Role.BUSINESS) handleDeleteAccount();
+                else System.out.println("❌ Invalid option.");
+                break;
+            case "12":
+                if (currentUser.getRole() == Role.BUSINESS) logout();
+                else System.out.println("❌ Invalid option.");
+                break;
+            default: System.out.println("❌ Invalid option.");
         }
     }
 
@@ -167,14 +222,12 @@ public class Main {
 
     private static void handleAddMoney() {
         System.out.println("\n--- ➕ ADD MONEY ---");
-        // Check for cards
         List<PaymentMethod> cards = paymentMethodDAO.getMethodsByUserId(currentUser.getUserId());
         if (cards.isEmpty()) {
             System.out.println("⚠️ No saved cards. Go to 'Manage Cards' first.");
             return;
         }
 
-        // Select Card
         System.out.println("Select Payment Method:");
         for (int i = 0; i < cards.size(); i++) {
             System.out.println((i + 1) + ". " + cards.get(i));
@@ -195,10 +248,10 @@ public class Main {
             if (transactionService.processDeposit(currentUser.getUserId(), amount)) {
                 System.out.println("✅ Deposit Successful!");
             } else {
-                System.out.println("❌ Failed.");
+                System.out.println("❌ Deposit Failed.");
             }
         } catch (Exception e) {
-            System.out.println("❌ Error processing deposit.");
+            System.out.println("❌ Invalid input.");
         }
     }
 
@@ -212,10 +265,10 @@ public class Main {
             if (transactionService.processTransfer(currentUser.getUserId(), email, amount)) {
                 System.out.println("✅ Sent Successfully!");
             } else {
-                System.out.println("❌ Transfer Failed (Check Balance/Email).");
+                System.out.println("❌ Transfer Failed (Check Balance or Email).");
             }
         } catch (Exception e) {
-            System.out.println("❌ Invalid amount.");
+            System.out.println("❌ Invalid amount format.");
         }
     }
 
@@ -226,7 +279,7 @@ public class Main {
 
         int payerId = userService.getUserIdByEmail(email);
         if (payerId == -1 || payerId == currentUser.getUserId()) {
-            System.out.println("❌ User not found.");
+            System.out.println("❌ User not found or invalid.");
             return;
         }
 
@@ -251,19 +304,16 @@ public class Main {
     private static void handlePendingPayments() {
         System.out.println("\n--- 📥 PENDING PAYMENTS ---");
 
-        // 1. Money Requests
         List<PaymentRequest> requests = requestDAO.getIncomingRequests(currentUser.getUserId());
         System.out.println("[Money Requests]");
         if (requests.isEmpty()) System.out.println("  (None)");
         else for (PaymentRequest r : requests) System.out.println("  ID: " + r.getRequestId() + " | Amount: $" + r.getAmount());
 
-        // 2. Invoices
         List<Invoice> invoices = invoiceDAO.getInvoicesForCustomer(currentUser.getEmail());
         System.out.println("\n[Invoices]");
         if (invoices.isEmpty()) System.out.println("  (None)");
         else for (Invoice i : invoices) System.out.println("  INV#" + i.getInvoiceId() + " | " + i.getDescription() + " | $" + i.getAmount());
 
-        // 3. Process Payment
         System.out.println("\nTo Pay: Type 'P R [ID]' (Request) or 'P I [ID]' (Invoice). Type '0' to Back.");
         System.out.print("> ");
         String input = scanner.nextLine().toUpperCase();
@@ -275,7 +325,7 @@ public class Main {
                 if (r != null && transactionService.processTransfer(currentUser.getUserId(), r.getRequesterId(), r.getAmount())) {
                     requestDAO.updateStatus(id, "ACCEPTED");
                     System.out.println("✅ Request Paid!");
-                } else System.out.println("❌ Failed.");
+                } else System.out.println("❌ Payment Failed.");
 
             } else if (input.startsWith("P I ")) {
                 int id = Integer.parseInt(input.substring(4));
@@ -283,7 +333,7 @@ public class Main {
                 if (inv != null && transactionService.processTransfer(currentUser.getUserId(), inv.getBusinessId(), inv.getAmount())) {
                     invoiceDAO.markAsPaid(id);
                     System.out.println("✅ Invoice Paid!");
-                } else System.out.println("❌ Failed.");
+                } else System.out.println("❌ Payment Failed.");
             }
         } catch (Exception e) {
             System.out.println("❌ Invalid Command.");
@@ -299,7 +349,8 @@ public class Main {
         System.out.println("1. View Cards");
         System.out.println("2. Add Card");
         System.out.print("Choice: ");
-        if (scanner.nextLine().equals("2")) {
+
+        if ("2".equals(scanner.nextLine())) {
             System.out.print("Card Number (16 digits): ");
             String num = scanner.nextLine();
             System.out.print("Type (CREDIT/DEBIT): ");
@@ -312,7 +363,7 @@ public class Main {
                 paymentMethodDAO.addPaymentMethod(pm);
                 System.out.println("✅ Card Added.");
             } catch (Exception e) {
-                System.out.println("❌ Invalid Date.");
+                System.out.println("❌ Invalid Date format.");
             }
         } else {
             List<PaymentMethod> list = paymentMethodDAO.getMethodsByUserId(currentUser.getUserId());
@@ -324,7 +375,7 @@ public class Main {
     private static void handleViewHistory() {
         System.out.println("\n--- 📜 HISTORY ---");
         List<Transaction> list = transactionService.getHistory(currentUser.getUserId());
-        if(list.isEmpty()) System.out.println("No transactions.");
+        if(list.isEmpty()) System.out.println("No transactions found.");
         else list.forEach(t -> {
             String sign = (t.getSenderId() == currentUser.getUserId()) ? "-" : "+";
             System.out.println(t.getType() + " | " + sign + "$" + t.getAmount() + " | " + t.getTimestamp());
@@ -354,7 +405,7 @@ public class Main {
             if (invoiceDAO.createInvoice(new Invoice(currentUser.getUserId(), email, amt, desc))) {
                 System.out.println("✅ Invoice Sent!");
             } else {
-                System.out.println("❌ Error.");
+                System.out.println("❌ Failed to create invoice.");
             }
         } catch (Exception e) {
             System.out.println("❌ Invalid Amount.");
@@ -378,7 +429,7 @@ public class Main {
     private static void handleViewLoans() {
         System.out.println("\n--- 📜 LOANS ---");
         List<Loan> loans = loanDAO.getLoansByUserId(currentUser.getUserId());
-        if (loans.isEmpty()) System.out.println("No loans.");
+        if (loans.isEmpty()) System.out.println("No loans found.");
         else loans.forEach(System.out::println);
     }
 
@@ -388,16 +439,16 @@ public class Main {
 
     private static void handleDeleteAccount() {
         System.out.println("\n⚠️ DELETE ACCOUNT ⚠️");
-        System.out.print("Type 'yes' to confirm: ");
+        System.out.print("Are you sure? Type 'yes' to confirm: ");
         if (scanner.nextLine().equalsIgnoreCase("yes")) {
             userService.deleteAccount(currentUser.getUserId());
             currentUser = null;
-            System.out.println("Account Deleted.");
+            System.out.println("✅ Account Deleted.");
         }
     }
 
     private static void logout() {
-        currentUser = null;
         System.out.println("Logging out...");
+        currentUser = null;
     }
 }
