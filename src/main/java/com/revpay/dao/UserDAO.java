@@ -32,6 +32,9 @@ public class UserDAO {
      * @param user The {@link User} object containing registration details.
      * @return {@code true} if the user was successfully registered, {@code false} otherwise.
      */
+    /**
+     * Registers a new user in the database.
+     */
     public boolean registerUser(User user) {
         String sql = "INSERT INTO users (email, phone_number, password_hash, transaction_pin, full_name, role) VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -39,7 +42,7 @@ public class UserDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, user.getEmail());
-            stmt.setString(2, user.getPhoneNumber()); // Ensure DB column is 'phone_number'
+            stmt.setString(2, user.getPhoneNumber());
             stmt.setString(3, user.getPasswordHash());
             stmt.setString(4, user.getTransactionPin());
             stmt.setString(5, user.getFullName());
@@ -53,7 +56,14 @@ public class UserDAO {
             }
 
         } catch (SQLException e) {
-            logger.error("❌ Error registering user: " + user.getEmail(), e);
+            // 🔍 CHECK: Is this a "Duplicate Entry" error? (SQLState 23000 is for integrity violations)
+            if ("23000".equals(e.getSQLState())) {
+                // Log a clean warning WITHOUT the stack trace
+                logger.warn("⚠️ Registration attempt failed: Email '" + user.getEmail() + "' already exists.");
+            } else {
+                // If it's some other weird error (like DB connection lost), print the full log
+                logger.error("❌ Unexpected DB Error for " + user.getEmail(), e);
+            }
         }
         return false;
     }

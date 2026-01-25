@@ -133,3 +133,72 @@ java.sql.SQLException: Insufficient funds or invalid sender.
 2026-01-25 09:44:21 [main] INFO  com.revpay.dao.UserDAO - ✅ User ID 18 Deleted Successfully.
 2026-01-25 09:48:59 [main] INFO  com.revpay.Main - 🚀 RevPay Application Started
 2026-01-25 09:48:59 [main] INFO  com.revpay.Main - 🛑 Application Stopped by User
+2026-01-25 14:37:37 [main] INFO  com.revpay.Main - 🚀 RevPay Application Started
+2026-01-25 14:38:48 [main] ERROR com.revpay.dao.UserDAO - ❌ Error registering user: nihir@gmail.com
+java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'nihir@gmail.com' for key 'users.email'
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:118) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:916) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1061) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1009) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1320) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:994) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.revpay.dao.UserDAO.registerUser(UserDAO.java:48) [classes/:?]
+	at com.revpay.service.UserService.registerUser(UserService.java:67) [classes/:?]
+	at com.revpay.Main.handleRegister(Main.java:130) [classes/:?]
+	at com.revpay.Main.main(Main.java:67) [classes/:?]
+2026-01-25 14:43:50 [main] ERROR com.revpay.dao.UserDAO - ❌ Error registering user: nihir@gmail.com
+java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'nihir@gmail.com' for key 'users.email'
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:118) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:916) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1061) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1009) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1320) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:994) ~[mysql-connector-j-8.0.33.jar:8.0.33]
+	at com.revpay.dao.UserDAO.registerUser(UserDAO.java:48) [classes/:?]
+	at com.revpay.service.UserService.registerUser(UserService.java:67) [classes/:?]
+	at com.revpay.Main.handleRegister(Main.java:130) [classes/:?]
+	at com.revpay.Main.main(Main.java:67) [classes/:?]
+2026-01-25 14:45:25 [main] INFO  com.revpay.Main - 🚀 RevPay Application Started
+2026-01-25 14:45:54 [main] WARN  com.revpay.dao.UserDAO - ⚠️ Registration attempt failed: Email 'nihir@gmail.com' already exists.
+2026-01-25 14:46:20 [main] INFO  com.revpay.service.UserService - ✅ User Logged In: nihir@gmail.com
+2026-01-25 14:47:54 [main] INFO  com.revpay.service.UserService - 🗑️ Deleting account for User ID: 3
+2026-01-25 14:47:54 [main] WARN  com.revpay.dao.UserDAO - ⚠️ Attempting to delete User ID: 3
+2026-01-25 14:47:54 [main] INFO  com.revpay.dao.UserDAO - ✅ User ID 3 Deleted Successfully.
+2026-01-25 14:50:06 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: nihir@gmail.com
+2026-01-25 14:50:06 [main] INFO  com.revpay.dao.WalletDAO - ✅ Wallet created for User ID: 22
+2026-01-25 14:50:06 [main] INFO  com.revpay.service.UserService - ✅ Registration Complete: Wallet created for nihir@gmail.com
+2026-01-25 14:51:29 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: 
+2026-01-25 14:51:29 [main] INFO  com.revpay.dao.WalletDAO - ✅ Wallet created for User ID: 23
+2026-01-25 14:51:29 [main] INFO  com.revpay.service.UserService - ✅ Registration Complete: Wallet created for 
+2026-01-25 14:52:15 [main] INFO  com.revpay.dao.UserDAO - ✅ New User Registered: amit@gmail.com
+2026-01-25 14:52:15 [main] INFO  com.revpay.dao.WalletDAO - ✅ Wallet created for User ID: 24
+2026-01-25 14:52:15 [main] INFO  com.revpay.service.UserService - ✅ Registration Complete: Wallet created for amit@gmail.com
+2026-01-25 14:53:32 [main] INFO  com.revpay.service.UserService - ✅ User Logged In: nihir@gmail.com
+2026-01-25 14:54:05 [main] INFO  com.revpay.dao.LoanDAO - ✅ Loan Application Submitted: User ID 22 requested $10000
+2026-01-25 14:54:25 [main] INFO  com.revpay.dao.RequestDAO - ✅ Payment Request Created: User 22 asked User 24 for $500
+2026-01-25 14:54:50 [main] INFO  com.revpay.service.UserService - ✅ User Logged In: amit@gmail.com
+2026-01-25 15:01:17 [main] INFO  com.revpay.service.TransactionService - Initiating Transfer: 24 -> 22 ($500.00)
+2026-01-25 15:01:17 [main] WARN  com.revpay.dao.TransactionDAO - Transfer Failed: Insufficient funds or invalid sender (User ID: 24)
+2026-01-25 15:01:17 [main] ERROR com.revpay.dao.TransactionDAO - ⚠️ Transaction Error. Rolling back changes...
+java.sql.SQLException: Insufficient funds or invalid sender.
+	at com.revpay.dao.TransactionDAO.transferMoney(TransactionDAO.java:77) [classes/:?]
+	at com.revpay.service.TransactionService.processTransfer(TransactionService.java:87) [classes/:?]
+	at com.revpay.Main.handlePendingPayments(Main.java:325) [classes/:?]
+	at com.revpay.Main.processDashboardChoice(Main.java:186) [classes/:?]
+	at com.revpay.Main.showUserDashboard(Main.java:172) [classes/:?]
+	at com.revpay.Main.handleLogin(Main.java:101) [classes/:?]
+	at com.revpay.Main.main(Main.java:68) [classes/:?]
+2026-01-25 15:04:14 [main] INFO  com.revpay.Main - 🛑 Application Stopped by User
+2026-01-25 15:04:24 [main] INFO  com.revpay.Main - 🚀 RevPay Application Started
+2026-01-25 15:04:49 [main] INFO  com.revpay.service.UserService - ✅ User Logged In: amit@gmail.com
+2026-01-25 15:04:57 [main] INFO  com.revpay.service.TransactionService - Initiating Transfer: 24 -> 22 ($500.00)
+2026-01-25 15:04:57 [main] WARN  com.revpay.dao.TransactionDAO - ⚠️ Transfer Failed: Insufficient funds for User ID 24
+2026-01-25 15:09:09 [main] INFO  com.revpay.dao.PaymentMethodDAO - ✅ Payment Method Added: CREDIT ending in ****1234 for User ID 24
+2026-01-25 15:09:24 [main] INFO  com.revpay.dao.TransactionDAO - ✅ Deposit Successful: $600 for User ID 24
+2026-01-25 15:09:38 [main] INFO  com.revpay.service.TransactionService - Initiating Transfer: 24 -> 22 ($500.00)
+2026-01-25 15:09:38 [main] INFO  com.revpay.dao.TransactionDAO - ✅ Transfer Successful: $500.00 from ID 24 to ID 22
+2026-01-25 15:09:38 [main] INFO  com.revpay.dao.RequestDAO - ✅ Request ID 1 updated to status: ACCEPTED
+2026-01-25 15:10:27 [main] INFO  com.revpay.service.UserService - ✅ User Logged In: nihir@gmail.com
+2026-01-25 15:10:44 [main] INFO  com.revpay.Main - 🛑 Application Stopped by User

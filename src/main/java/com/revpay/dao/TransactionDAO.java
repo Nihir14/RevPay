@@ -49,6 +49,9 @@ public class TransactionDAO {
      * @param amount     The amount to transfer.
      * @return {@code true} if the transfer is successful, {@code false} if failed (e.g., low balance).
      */
+    /**
+     * Transfers money from one user to another securely.
+     */
     public boolean transferMoney(int senderId, int receiverId, BigDecimal amount) {
         Connection conn = null;
         PreparedStatement withdrawStmt = null;
@@ -61,9 +64,7 @@ public class TransactionDAO {
 
         try {
             conn = DatabaseConnection.getConnection();
-
-            // 🛑 CRITICAL: Turn off auto-save. Start Atomic Transaction.
-            conn.setAutoCommit(false);
+            conn.setAutoCommit(false); // 🛑 Start Transaction
 
             // 1. Withdraw from Sender
             withdrawStmt = conn.prepareStatement(withdrawSQL);
@@ -73,8 +74,10 @@ public class TransactionDAO {
             int rowsAffected1 = withdrawStmt.executeUpdate();
 
             if (rowsAffected1 == 0) {
-                logger.warn("Transfer Failed: Insufficient funds or invalid sender (User ID: " + senderId + ")");
-                throw new SQLException("Insufficient funds or invalid sender.");
+                // 🛑 USER FRIENDLY FIX: Don't throw exception. Just log warning and exit.
+                logger.warn("⚠️ Transfer Failed: Insufficient funds for User ID " + senderId);
+                conn.rollback(); // Undo any locks
+                return false;    // Return false nicely
             }
 
             // 2. Deposit to Receiver
@@ -84,8 +87,9 @@ public class TransactionDAO {
             int rowsAffected2 = depositStmt.executeUpdate();
 
             if (rowsAffected2 == 0) {
-                logger.warn("Transfer Failed: Invalid receiver (User ID: " + receiverId + ")");
-                throw new SQLException("Invalid receiver.");
+                logger.warn("⚠️ Transfer Failed: Invalid receiver ID " + receiverId);
+                conn.rollback();
+                return false;
             }
 
             // 3. Log the Transaction
@@ -97,16 +101,16 @@ public class TransactionDAO {
             logStmt.setString(5, TransactionStatus.SUCCESS.name());
             logStmt.executeUpdate();
 
-            // ✅ If we get here, everything worked! Commit the changes.
+            // ✅ Commit Success
             conn.commit();
             logger.info("✅ Transfer Successful: $" + amount + " from ID " + senderId + " to ID " + receiverId);
             return true;
 
         } catch (SQLException e) {
-            // ❌ If ANY error happened, UNDO everything.
+            // ❌ Only REAL errors (like DB crash) land here now
             if (conn != null) {
                 try {
-                    logger.error("⚠️ Transaction Error. Rolling back changes...", e);
+                    logger.error("🔥 System Error. Rolling back...", e);
                     conn.rollback();
                 } catch (SQLException ex) {
                     logger.error("Critical: Rollback failed!", ex);
@@ -114,7 +118,6 @@ public class TransactionDAO {
             }
             return false;
         } finally {
-            // Close everything to prevent memory leaks
             closeResources(withdrawStmt, depositStmt, logStmt, conn);
         }
     }
